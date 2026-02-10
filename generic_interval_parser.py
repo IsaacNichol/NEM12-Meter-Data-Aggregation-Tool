@@ -5,19 +5,22 @@ from datetime import timedelta
 import re
 from typing import List, Optional
 import warnings
+from utils import localize_naive_to_industry, get_industry_timezone
 
 
 class GenericIntervalParser:
     """Parser for generic wide-format interval CSV files."""
 
-    def __init__(self, filepath: str):
+    def __init__(self, filepath: str, state: str = 'NSW'):
         """
         Initialize parser with filepath.
 
         Args:
             filepath: Path to generic interval CSV file
+            state: Australian state code (for timezone handling)
         """
         self.filepath = filepath
+        self.state = state
         self.df_raw: Optional[pd.DataFrame] = None
         self.meter_info_cache: Optional[dict] = None
 
@@ -64,6 +67,17 @@ class GenericIntervalParser:
                 # Parse start datetime
                 interval_start_at = pd.to_datetime(row['interval_start_at'])
 
+                # Convert to timezone-aware Industry time if needed
+                if interval_start_at.tzinfo is None:
+                    # Naive datetime - assume it's Industry time
+                    interval_start_at_aware = localize_naive_to_industry(
+                        interval_start_at.to_pydatetime()
+                    )
+                else:
+                    # Already timezone-aware - convert to Industry time
+                    industry_tz = get_industry_timezone()
+                    interval_start_at_aware = interval_start_at.tz_convert(industry_tz)
+
                 # Get meter identifiers
                 nmi = str(row.get('meterpoint_id', row.get('device_id', '')))
                 register_id = str(row.get('register_identifier', ''))
@@ -99,7 +113,7 @@ class GenericIntervalParser:
                     # Calculate timestamp for this interval
                     # reading1 corresponds to the first interval starting at interval_start_at
                     # reading2 is interval_length minutes later, etc.
-                    timestamp = interval_start_at + timedelta(minutes=interval_length * (reading_num - 1))
+                    timestamp = interval_start_at_aware + timedelta(minutes=interval_length * (reading_num - 1))
 
                     # Get quality information
                     quality_flag_col = f'reading{reading_num}_quality_flag'

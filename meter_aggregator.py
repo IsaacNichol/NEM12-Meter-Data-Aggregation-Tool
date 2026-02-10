@@ -121,12 +121,13 @@ def validate_file(filepath: str):
     print("✓ File structure is valid")
 
 
-def parse_file(filepath: str) -> tuple:
+def parse_file(filepath: str, state: str) -> tuple:
     """
-    Parse file using appropriate parser based on detected format.
+    Parse file using appropriate parser.
 
     Args:
-        filepath: Path to file
+        filepath: Path to meter data file
+        state: Australian state code (for timezone handling)
 
     Returns:
         Tuple of (dataframe, meter_info)
@@ -137,18 +138,20 @@ def parse_file(filepath: str) -> tuple:
     print("\nParsing file...")
 
     try:
-        # Detect format
         format_type = detect_csv_format(filepath)
 
-        # Get appropriate parser
-        parser = get_parser_for_format(format_type, filepath)
+        # Pass state to parser for timezone handling
+        if format_type == 'nem12':
+            parser = NEM12Parser(filepath, state)
+        elif format_type == 'generic_interval':
+            parser = GenericIntervalParser(filepath, state)
+        else:
+            raise ValueError(f"Unsupported format: {format_type}")
 
-        # Parse (same interface for both parsers)
         df = parser.parse()
         meter_info = parser.get_meter_info()
 
         print(f"✓ Successfully parsed {len(df):,} intervals")
-
         return df, meter_info
 
     except Exception as e:
@@ -259,29 +262,32 @@ def display_and_save_results(aggregated_df, classified_df, summary_stats, nmi):
 def main():
     """Main execution flow."""
     try:
-        # Display banner
         print_banner()
-
-        # Select file
         filepath = select_file()
-
-        # Validate file
         validate_file(filepath)
 
-        # Parse file
-        df, meter_info = parse_file(filepath)
+        # REORDERED: Configure TOU periods BEFORE parsing
+        # This ensures state is known before timestamp conversion
+        print("\nℹ State selection is required for accurate timezone handling.")
+        print("  Meter data is in Industry time (UTC+10), which will be")
+        print("  used for TOU period classification in your local timezone.\n")
 
-        # Display meter info
-        display_meter_info(meter_info)
-
-        # Configure TOU periods
         periods, state = configure_periods()
 
+        # Parse with state parameter
+        df, meter_info = parse_file(filepath, state)
+
+        display_meter_info(meter_info)
+
         # Aggregate data
-        aggregated_df, classified_df, summary_stats = aggregate_data(df, periods, state)
+        aggregated_df, classified_df, summary_stats = aggregate_data(
+            df, periods, state
+        )
 
         # Display and save results
-        display_and_save_results(aggregated_df, classified_df, summary_stats, meter_info['nmi'])
+        display_and_save_results(
+            aggregated_df, classified_df, summary_stats, meter_info['nmi']
+        )
 
         # Completion message
         print("\n" + "=" * 70)

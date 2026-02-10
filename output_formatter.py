@@ -35,6 +35,20 @@ class OutputFormatter:
         print(f"Total Days: {self.stats['total_days']}")
         print(f"Total Intervals: {format_number(self.stats['total_intervals'], 0)}")
 
+        # Show timezone information
+        date_start = self.stats['date_range_start']
+        if hasattr(date_start, 'tzinfo') and date_start.tzinfo is not None:
+            tz_name = date_start.tzinfo.tzname(date_start)
+            print(f"Timezone: {tz_name} (Industry time: UTC+10)")
+
+        # Show DST transition warnings if any
+        if 'dst_transitions' in self.stats and self.stats['dst_transitions']:
+            print("\n⚠ DST Transition Days Detected:")
+            for trans in self.stats['dst_transitions']:
+                trans_type = "Spring forward (lost hour)" if trans['transition_type'] == 'spring_forward' else "Fall back (gained hour)"
+                print(f"  • {trans['date']}: {trans['interval_count']} intervals (expected {trans['expected_count']}) - {trans_type}")
+            print("  Note: Timestamps shown in Industry time; DST affects local classification only.")
+
         # Estimated data warning
         if self.stats['estimated_percentage'] > 0:
             print(f"\n⚠ Warning: {self.stats['estimated_percentage']:.1f}% of data is estimated")
@@ -167,7 +181,7 @@ class OutputFormatter:
 
     def save_detailed_csv(self, classified_df: pd.DataFrame, filepath: Optional[str] = None) -> str:
         """
-        Save detailed interval-level data with period classifications.
+        Save detailed interval-level data with Industry time timestamps.
 
         Args:
             classified_df: DataFrame with classified intervals
@@ -183,6 +197,9 @@ class OutputFormatter:
         # Prepare DataFrame for export
         export_df = classified_df.copy()
 
+        # Format timestamp to show Industry time
+        export_df['timestamp'] = export_df['timestamp'].dt.strftime('%Y-%m-%d %H:%M:%S %Z')
+
         # Select and format columns
         export_df = export_df[[
             'timestamp',
@@ -194,7 +211,7 @@ class OutputFormatter:
         ]]
 
         export_df = export_df.rename(columns={
-            'timestamp': 'Timestamp',
+            'timestamp': 'Timestamp (Industry Time)',
             'consumption_kwh': 'Consumption_kWh',
             'period': 'Period',
             'day_type': 'Day_Type',
@@ -202,8 +219,8 @@ class OutputFormatter:
             'is_estimate': 'Is_Estimate'
         })
 
-        # Sort by timestamp
-        export_df = export_df.sort_values('Timestamp')
+        # Sort by timestamp (timestamp is already a string at this point, but order is preserved)
+        # Note: We can't sort after converting to string, so the DataFrame should already be sorted
 
         # Save to CSV
         export_df.to_csv(filepath, index=False)

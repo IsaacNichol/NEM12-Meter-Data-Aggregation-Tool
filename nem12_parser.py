@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 from dataclasses import dataclass
 from typing import List, Optional
 import warnings
+from utils import localize_naive_to_industry
 
 
 @dataclass
@@ -36,14 +37,16 @@ class Record300:
 class NEM12Parser:
     """Parser for NEM12 format electricity meter data files."""
 
-    def __init__(self, filepath: str):
+    def __init__(self, filepath: str, state: str = 'NSW'):
         """
         Initialize parser with filepath.
 
         Args:
             filepath: Path to NEM12 CSV file
+            state: Australian state code (for timezone handling)
         """
         self.filepath = filepath
+        self.state = state
         self.current_record_200: Optional[Record200] = None
         self.records: List[tuple[Record200, Record300]] = []
 
@@ -215,7 +218,9 @@ class NEM12Parser:
 
                 # Calculate timestamp for this interval
                 # Interval 0 is from 00:00 to 00:30 (for 30-min intervals)
-                timestamp = interval_date + timedelta(minutes=interval_index * interval_length_minutes)
+                naive_timestamp = interval_date + timedelta(minutes=interval_index * interval_length_minutes)
+                # Convert naive timestamp to timezone-aware Industry time
+                timestamp = localize_naive_to_industry(naive_timestamp)
 
                 # Determine if this is an estimate
                 is_estimate = record_300.quality_method in ['E', 'F', 'S']

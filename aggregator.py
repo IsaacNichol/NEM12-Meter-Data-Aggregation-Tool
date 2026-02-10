@@ -5,6 +5,7 @@ import holidays
 from datetime import datetime
 from typing import List
 from tou_config import PeriodDefinition
+from utils import convert_to_local_time
 
 
 class MeterDataAggregator:
@@ -49,17 +50,20 @@ class MeterDataAggregator:
         Priority: holiday > weekend > weekday
 
         Args:
-            timestamp: Datetime to classify
+            timestamp: Timezone-aware datetime (Industry time)
 
         Returns:
             'holiday', 'weekend', or 'weekday'
         """
-        # Check if it's a public holiday
-        if timestamp.date() in self.holidays:
+        # Convert Industry time to local time for classification
+        local_timestamp = convert_to_local_time(timestamp, self.state)
+
+        # Check if it's a public holiday (use local date)
+        if local_timestamp.date() in self.holidays:
             return 'holiday'
 
         # Check if it's a weekend (Saturday=5, Sunday=6)
-        if timestamp.weekday() >= 5:
+        if local_timestamp.weekday() >= 5:
             return 'weekend'
 
         return 'weekday'
@@ -69,13 +73,15 @@ class MeterDataAggregator:
         Classify an interval into a period based on time and day type.
 
         Args:
-            timestamp: Timestamp of interval
+            timestamp: Timezone-aware datetime (Industry time)
             day_type: 'holiday', 'weekend', or 'weekday'
 
         Returns:
             Period name or 'Unclassified'
         """
-        interval_time = timestamp.time()
+        # Convert Industry time to local time for period matching
+        local_timestamp = convert_to_local_time(timestamp, self.state)
+        interval_time = local_timestamp.time()
 
         # Check each period in order (first match wins)
         for period in self.periods:
@@ -131,6 +137,41 @@ class MeterDataAggregator:
 
         return agg_results
 
+    def _detect_dst_transitions(self) -> List[dict]:
+        """
+        Detect days with DST transitions (non-standard interval counts).
+
+        Returns:
+            List of dicts with transition information
+        """
+        transitions = []
+
+        # Group intervals by date
+        self.df['date'] = self.df['timestamp'].dt.date
+        daily_counts = self.df.groupby('date').size()
+
+        # Standard interval counts for 30-min intervals
+        expected_count = 48  # 24 hours * 2 intervals per hour
+
+        for date, count in daily_counts.items():
+            if count != expected_count:
+                # Convert first timestamp of this day to local time
+                first_ts = self.df[self.df['date'] == date]['timestamp'].iloc[0]
+                local_ts = convert_to_local_time(first_ts, self.state)
+
+                transitions.append({
+                    'date': date,
+                    'interval_count': count,
+                    'expected_count': expected_count,
+                    'local_timezone': str(local_ts.tzinfo),
+                    'transition_type': 'spring_forward' if count < expected_count else 'fall_back'
+                })
+
+        # Clean up temporary column
+        self.df = self.df.drop('date', axis=1)
+
+        return transitions
+
     def get_summary_stats(self) -> dict:
         """
         Get summary statistics about the aggregated data.
@@ -158,5 +199,9 @@ class MeterDataAggregator:
         stats['weekday_intervals'] = day_type_counts.get('weekday', 0)
         stats['weekend_intervals'] = day_type_counts.get('weekend', 0)
         stats['holiday_intervals'] = day_type_counts.get('holiday', 0)
+
+        # Add DST transition detection
+        dst_transitions = self._detect_dst_transitions()
+        stats['dst_transitions'] = dst_transitions
 
         return stats

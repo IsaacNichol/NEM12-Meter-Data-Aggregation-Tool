@@ -140,6 +140,47 @@ def validate_nem12_structure(filepath: str) -> tuple[bool, str]:
         return False, f"Error reading file: {str(e)}"
 
 
+def get_industry_timezone() -> pytz.timezone:
+    """
+    Get Industry Time timezone (UTC+10, no DST).
+
+    Industry time is equivalent to Queensland time year-round.
+
+    Returns:
+        pytz.timezone: Fixed UTC+10 timezone
+    """
+    return pytz.timezone('Australia/Brisbane')
+
+
+def convert_to_local_time(industry_dt: datetime, state: str) -> datetime:
+    """
+    Convert timezone-aware Industry time to state local time.
+
+    Args:
+        industry_dt: Timezone-aware datetime in Industry time (UTC+10)
+        state: Australian state code (NSW, VIC, QLD, etc.)
+
+    Returns:
+        Timezone-aware datetime in state's local timezone
+    """
+    local_tz = get_australian_timezone(state)
+    return industry_dt.astimezone(local_tz)
+
+
+def localize_naive_to_industry(naive_dt: datetime) -> datetime:
+    """
+    Convert naive datetime to timezone-aware Industry time.
+
+    Args:
+        naive_dt: Naive datetime (assumed to be Industry time)
+
+    Returns:
+        Timezone-aware datetime in Industry time (UTC+10)
+    """
+    industry_tz = get_industry_timezone()
+    return industry_tz.localize(naive_dt)
+
+
 def get_australian_timezone(state: str) -> pytz.timezone:
     """
     Get the timezone for an Australian state.
