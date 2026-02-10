@@ -22,9 +22,6 @@ A Python CLI tool for aggregating Australian Electricity Interval Meter Data (NE
 ### Setup
 
 1. Navigate to the project directory:
-```bash
-cd /Users/isaac.nicholls/PythonProject/Meter-data
-```
 
 2. Create and activate a virtual environment (recommended):
 ```bash
