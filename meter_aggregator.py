@@ -9,10 +9,18 @@ into user-defined time-of-use periods with optional cost calculation.
 import sys
 import os
 from nem12_parser import NEM12Parser
+from generic_interval_parser import GenericIntervalParser
 from tou_config import TOUConfigurator
 from aggregator import MeterDataAggregator
 from output_formatter import OutputFormatter
-from utils import find_nem12_files, validate_nem12_structure
+from utils import (
+    find_nem12_files,
+    find_meter_data_files,
+    validate_nem12_structure,
+    validate_generic_csv_structure,
+    detect_csv_format,
+    get_parser_for_format
+)
 
 
 def print_banner():
@@ -25,7 +33,7 @@ def print_banner():
 
 def select_file() -> str:
     """
-    Find and select NEM12 file to process.
+    Find and select meter data file to process.
 
     Returns:
         Path to selected file
@@ -33,13 +41,13 @@ def select_file() -> str:
     Raises:
         SystemExit: If no files found or user cancels
     """
-    print("\nSearching for NEM12 CSV files in current directory...")
+    print("\nSearching for meter data CSV files in current directory...")
 
-    files = find_nem12_files('.')
+    files = find_meter_data_files('.')
 
     if not files:
         print("\n✗ No CSV files found in current directory")
-        filepath = input("Enter path to NEM12 file (or 'q' to quit): ").strip()
+        filepath = input("Enter path to meter data file (or 'q' to quit): ").strip()
         if filepath.lower() == 'q':
             print("Exiting...")
             sys.exit(0)
@@ -76,7 +84,7 @@ def select_file() -> str:
 
 def validate_file(filepath: str):
     """
-    Validate NEM12 file structure.
+    Validate file structure based on detected format.
 
     Args:
         filepath: Path to file
@@ -84,12 +92,30 @@ def validate_file(filepath: str):
     Raises:
         SystemExit: If validation fails
     """
-    print("\nValidating NEM12 file structure...")
-    is_valid, error_msg = validate_nem12_structure(filepath)
+    print("\nDetecting file format...")
+
+    # Detect format
+    format_type = detect_csv_format(filepath)
+
+    if format_type == 'unknown':
+        print("✗ Unknown file format. Expected NEM12 or generic interval CSV.")
+        sys.exit(1)
+
+    print(f"✓ Detected format: {format_type}")
+
+    # Validate based on format
+    print(f"\nValidating {format_type} file structure...")
+
+    if format_type == 'nem12':
+        is_valid, error_msg = validate_nem12_structure(filepath)
+    elif format_type == 'generic_interval':
+        is_valid, error_msg = validate_generic_csv_structure(filepath)
+    else:
+        print(f"✗ Unsupported format: {format_type}")
+        sys.exit(1)
 
     if not is_valid:
         print(f"✗ Validation failed: {error_msg}")
-        print("  Please ensure the file is in NEM12 format")
         sys.exit(1)
 
     print("✓ File structure is valid")
@@ -97,7 +123,7 @@ def validate_file(filepath: str):
 
 def parse_file(filepath: str) -> tuple:
     """
-    Parse NEM12 file.
+    Parse file using appropriate parser based on detected format.
 
     Args:
         filepath: Path to file
@@ -108,10 +134,16 @@ def parse_file(filepath: str) -> tuple:
     Raises:
         SystemExit: If parsing fails
     """
-    print("\nParsing NEM12 file...")
+    print("\nParsing file...")
 
     try:
-        parser = NEM12Parser(filepath)
+        # Detect format
+        format_type = detect_csv_format(filepath)
+
+        # Get appropriate parser
+        parser = get_parser_for_format(format_type, filepath)
+
+        # Parse (same interface for both parsers)
         df = parser.parse()
         meter_info = parser.get_meter_info()
 

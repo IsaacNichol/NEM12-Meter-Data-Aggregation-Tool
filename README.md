@@ -6,7 +6,7 @@ A Python CLI tool for aggregating Australian Electricity Interval Meter Data (NE
 
 - **NEM12 Format Parsing**: Automatically parses Australian standard NEM12 CSV files
 - **Interactive Configuration**: User-friendly CLI to define custom time-of-use periods
-- **Flexible Period Definitions**: Different time ranges for weekdays, weekends, and public holidays
+- **Flexible Period Definitions**: Different time /ranges for weekdays, weekends, and public holidays
 - **Australian Public Holidays**: Automatic detection of public holidays by state
 - **Cost Calculation**: Optional pricing per period to calculate electricity costs
 - **Detailed Reporting**: Console output with formatted tables and CSV export
