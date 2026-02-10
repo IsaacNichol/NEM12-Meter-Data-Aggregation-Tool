@@ -59,12 +59,18 @@ def check_modules():
     """Check that project modules can be imported."""
     print("\nChecking project modules...")
 
+    # Add parent directory to path to allow imports from root
+    parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    if parent_dir not in sys.path:
+        sys.path.insert(0, parent_dir)
+
     modules = [
-        'utils',
-        'nem12_parser',
-        'tou_config',
-        'aggregator',
-        'output_formatter',
+        'src.utils',
+        'src.nem12_parser',
+        'src.generic_interval_parser',
+        'src.tou_config',
+        'src.aggregator',
+        'src.output_formatter',
         'meter_aggregator',
     ]
 
@@ -73,12 +79,12 @@ def check_modules():
     for module_name in modules:
         try:
             __import__(module_name)
-            print(f"✓ {module_name}.py")
+            print(f"✓ {module_name}")
         except ImportError as e:
-            print(f"✗ {module_name}.py: {str(e)}")
+            print(f"✗ {module_name}: {str(e)}")
             all_ok = False
         except Exception as e:
-            print(f"⚠ {module_name}.py: {str(e)} (may be OK)")
+            print(f"⚠ {module_name}: {str(e)} (may be OK)")
 
     return all_ok
 
@@ -87,11 +93,12 @@ def check_test_file():
     """Check if test NEM12 file exists."""
     print("\nChecking test data...")
 
-    if os.path.exists('test_nem12.csv'):
-        print("✓ test_nem12.csv found")
+    test_file = os.path.join(os.path.dirname(__file__), 'test_nem12.csv')
+    if os.path.exists(test_file):
+        print("✓ tests/test_nem12.csv found")
         return True
     else:
-        print("⚠ test_nem12.csv not found (optional)")
+        print("⚠ tests/test_nem12.csv not found (optional)")
         return True
 
 
@@ -99,10 +106,12 @@ def check_documentation():
     """Check if documentation files exist."""
     print("\nChecking documentation...")
 
+    parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     docs = ['README.md', 'QUICKSTART.md']
 
     for doc in docs:
-        if os.path.exists(doc):
+        doc_path = os.path.join(parent_dir, doc)
+        if os.path.exists(doc_path):
             print(f"✓ {doc}")
         else:
             print(f"⚠ {doc} not found")

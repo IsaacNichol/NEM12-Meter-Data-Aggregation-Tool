@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from dataclasses import dataclass
 from typing import List, Optional
 import warnings
-from utils import localize_naive_to_industry
+from src.utils import localize_naive_to_industry
 
 
 @dataclass

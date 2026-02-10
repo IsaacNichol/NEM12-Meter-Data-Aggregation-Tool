@@ -3,7 +3,7 @@
 from dataclasses import dataclass, field
 from datetime import time
 from typing import List, Optional
-from utils import parse_time_string, validate_time_format
+from src.utils import parse_time_string, validate_time_format
 
 
 @dataclass

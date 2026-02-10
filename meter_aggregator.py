@@ -8,12 +8,12 @@ into user-defined time-of-use periods with optional cost calculation.
 
 import sys
 import os
-from nem12_parser import NEM12Parser
-from generic_interval_parser import GenericIntervalParser
-from tou_config import TOUConfigurator
-from aggregator import MeterDataAggregator
-from output_formatter import OutputFormatter
-from utils import (
+from src.nem12_parser import NEM12Parser
+from src.generic_interval_parser import GenericIntervalParser
+from src.tou_config import TOUConfigurator
+from src.aggregator import MeterDataAggregator
+from src.output_formatter import OutputFormatter
+from src.utils import (
     find_nem12_files,
     find_meter_data_files,
     validate_nem12_structure,
@@ -41,12 +41,13 @@ def select_file() -> str:
     Raises:
         SystemExit: If no files found or user cancels
     """
-    print("\nSearching for meter data CSV files in current directory...")
+    print("\nSearching for meter data CSV files in input/ directory...")
 
-    files = find_meter_data_files('.')
+    files = find_meter_data_files('./input')
 
     if not files:
-        print("\n✗ No CSV files found in current directory")
+        print("\n✗ No CSV files found in input/ directory")
+        print("Please place your meter data CSV file in the 'input/' folder and try again.")
         filepath = input("Enter path to meter data file (or 'q' to quit): ").strip()
         if filepath.lower() == 'q':
             print("Exiting...")

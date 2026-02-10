@@ -22,10 +22,20 @@ You should see:
 
 ### Quick Test with Sample Data
 
-A test NEM12 file (`test_nem12.csv`) is included with 7 days of sample data.
+A test NEM12 file is included in the `tests/` folder.
+
+**To use your own data:**
+1. Place your CSV file in the `input/` folder
+2. Run the tool:
 
 ```bash
 python meter_aggregator.py
+```
+
+Or use the helper scripts:
+```bash
+./run.sh           # Mac/Linux
+run.bat            # Windows
 ```
 
 Follow the prompts:
@@ -73,13 +83,13 @@ The tool will display:
 
 ### Output Files
 
-Two CSV files are created:
+Results are saved to the `output/` directory:
 
-1. **Aggregated Results** (`aggregated_results_*.csv`):
+1. **Aggregated Results** (`output/aggregated_results_*.csv`):
    - Summary by period
    - Ready for reporting
 
-2. **Detailed Intervals** (`detailed_intervals_*.csv`) - Optional:
+2. **Detailed Intervals** (`output/detailed_intervals_*.csv`) - Optional:
    - Every 30-minute interval with its classification
    - Timestamps labeled as "Industry Time"
    - Useful for detailed analysis
@@ -135,7 +145,7 @@ Third range:  (press Enter to finish)
 ## Troubleshooting
 
 ### "No CSV files found"
-Place your NEM12 CSV file in the same directory as `meter_aggregator.py`
+Place your meter data CSV file in the `input/` directory
 
 ### "Invalid time format"
 Use formats like:
@@ -159,12 +169,13 @@ source .venv/bin/activate
 
 ## Using Your Own Data
 
-1. Place your meter data file (NEM12 or generic interval CSV) in the project directory
+1. Place your meter data file (NEM12 or generic interval CSV) in the `input/` directory
 2. Run `python meter_aggregator.py`
 3. Select your file when prompted
 4. **Important**: Select your correct state for accurate timezone handling
 5. Follow the same configuration steps
 6. Define time ranges in your **local time** (not Industry time)
+7. Results will be saved to the `output/` directory
 
 ## Getting Help
 
@@ -182,7 +193,7 @@ $ python meter_aggregator.py
   Australian Electricity Interval Data Analysis
 ======================================================================
 
-Searching for meter data CSV files in current directory...
+Searching for meter data CSV files in input/ directory...
 ✓ Found 1 CSV file: test_nem12.csv
 
 Detecting file format...
@@ -225,7 +236,7 @@ How many time-of-use periods do you want to define? 3
 
 [... results displayed ...]
 
-✓ Aggregated results saved to: aggregated_results_1234567890_20240210_180530.csv
+✓ Aggregated results saved to: output/aggregated_results_1234567890_20240210_180530.csv
 ```
 
 Enjoy using the NEM12 Meter Data Aggregation Tool!

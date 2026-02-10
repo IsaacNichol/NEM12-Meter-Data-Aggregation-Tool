@@ -5,7 +5,7 @@ from datetime import timedelta
 import re
 from typing import List, Optional
 import warnings
-from utils import localize_naive_to_industry, get_industry_timezone
+from src.utils import localize_naive_to_industry, get_industry_timezone
 
 
 class GenericIntervalParser:

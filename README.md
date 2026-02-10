@@ -93,11 +93,17 @@ pip install -r requirements.txt
 
 ### Basic Usage
 
-1. Place your NEM12 CSV file(s) in the project directory
+1. **Place your meter data CSV file(s) in the `input/` directory**
 
-2. Run the script:
+2. Run the script from the project root:
 ```bash
 python meter_aggregator.py
+```
+
+Or use the helper scripts:
+```bash
+./run.sh           # Mac/Linux
+run.bat            # Windows
 ```
 
 3. Follow the interactive prompts to:
@@ -107,7 +113,7 @@ python meter_aggregator.py
    - Set time ranges for weekdays, weekends, and holidays (in local time)
    - Optionally add pricing per period
 
-4. View results in the console and exported CSV files
+4. View results in the console and exported CSV files in the `output/` directory
 
 ### Example Configuration
 
@@ -166,8 +172,10 @@ The tool automatically detects the format and handles:
 
 ## Output Files
 
+Results are saved to the `output/` directory:
+
 ### Aggregated Results CSV
-`aggregated_results_{NMI}_{timestamp}.csv`
+`output/aggregated_results_{NMI}_{timestamp}.csv`
 
 Contains:
 - Period name
@@ -178,7 +186,7 @@ Contains:
 - Total cost (if pricing provided)
 
 ### Detailed Intervals CSV (Optional)
-`detailed_intervals_{NMI}_{timestamp}.csv`
+`output/detailed_intervals_{NMI}_{timestamp}.csv`
 
 Contains:
 - Timestamp (Industry Time) for each interval
@@ -212,16 +220,28 @@ Supported state codes for holiday detection and timezone handling:
 ## Project Structure
 
 ```
-Meter-data/
-├── meter_aggregator.py       # Main orchestration script
-├── nem12_parser.py           # NEM12 format parser
-├── generic_interval_parser.py # Generic interval CSV parser
-├── tou_config.py             # Interactive TOU configuration
-├── aggregator.py             # Data classification and aggregation
-├── output_formatter.py       # Console and CSV output formatting
-├── utils.py                  # Utility functions (includes timezone helpers)
+NEM12-Meter-Data-Aggregation-Tool/
+├── meter_aggregator.py       # Main executable script
+├── run.sh                    # Helper script for Mac/Linux
+├── run.bat                   # Helper script for Windows
+│
+├── src/                      # Source code modules
+│   ├── __init__.py
+│   ├── nem12_parser.py       # NEM12 format parser
+│   ├── generic_interval_parser.py  # Generic CSV parser
+│   ├── aggregator.py         # Data classification and aggregation
+│   ├── output_formatter.py   # Output formatting
+│   ├── tou_config.py         # TOU period configuration
+│   └── utils.py              # Utility functions
+│
+├── input/                    # Place your CSV files here
+├── output/                   # Generated results
+├── tests/                    # Test data and verification
+│
 ├── requirements.txt          # Python dependencies
-└── README.md                 # This file
+├── README.md                 # This file
+├── QUICKSTART.md            # Quick start guide
+└── DELIVERABLES.md          # Technical documentation
 ```
 
 ## Error Handling
@@ -249,8 +269,9 @@ The tool handles:
 ## Troubleshooting
 
 ### "No CSV files found"
+- Ensure your CSV file is in the `input/` directory
 - Ensure your NEM12 file has a `.csv` extension
-- Check you're running the script from the correct directory
+- Check you're running the script from the project root directory
 
 ### "Invalid file format" or parsing errors
 - Verify the file is in NEM12 or generic interval CSV format

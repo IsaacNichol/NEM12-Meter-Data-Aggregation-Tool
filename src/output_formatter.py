@@ -1,10 +1,11 @@
 """Output formatting module for displaying and saving aggregated results."""
 
 import pandas as pd
+import os
 from datetime import datetime
 from tabulate import tabulate
 from typing import Optional
-from utils import format_currency, format_number
+from src.utils import format_currency, format_number
 
 
 class OutputFormatter:
@@ -140,9 +141,12 @@ class OutputFormatter:
         Returns:
             Path to saved file
         """
+        # Ensure output directory exists
+        os.makedirs("output", exist_ok=True)
+
         if filepath is None:
             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-            filepath = f"aggregated_results_{self.nmi}_{timestamp}.csv"
+            filepath = os.path.join("output", f"aggregated_results_{self.nmi}_{timestamp}.csv")
 
         # Prepare DataFrame for export
         export_df = self.agg_df.copy()
@@ -190,9 +194,12 @@ class OutputFormatter:
         Returns:
             Path to saved file
         """
+        # Ensure output directory exists
+        os.makedirs("output", exist_ok=True)
+
         if filepath is None:
             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-            filepath = f"detailed_intervals_{self.nmi}_{timestamp}.csv"
+            filepath = os.path.join("output", f"detailed_intervals_{self.nmi}_{timestamp}.csv")
 
         # Prepare DataFrame for export
         export_df = classified_df.copy()

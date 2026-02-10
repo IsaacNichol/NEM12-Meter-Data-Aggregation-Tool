@@ -1,0 +1,25 @@
+# Virtual environment
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Input files (users add their own)
+input/*.csv
+input/*.CSV
+!input/.gitkeep
+
+# Output files (generated)
+output/*.csv
+output/*.CSV
+!output/.gitkeep
+
+# OS files
+.DS_Store
+Thumbs.db
